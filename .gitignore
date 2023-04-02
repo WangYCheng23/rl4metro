@@ -1,0 +1,7 @@
+logs/*
+models/*
+raw_data/*
+
+*.ipynb
+__pycache__
+.ipynb_checkpoints
