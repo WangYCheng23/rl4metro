@@ -1,9 +1,8 @@
 import os
 import datetime as dt
 from config import get_args, get_env_args
-from stable_baselines3 import PPO, A2C, DDPG
+from stable_baselines3 import PPO
 from environment.metro_env_eventbased import MetroEnvEventbased
-from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.env_checker import check_env
 
 
@@ -20,8 +19,7 @@ def train():
     args = get_args()
     params = get_env_args(args)
     env = MetroEnvEventbased(params)
-    # action_noise = OrnsteinUhlenbeckActionNoise(mean=np.zeros(params["num_actions"]), sigma=float(0.5) * np.ones(params["num_actions"]))
-    check_env(env)
+    check_env(env=env, warn=True, skip_render_check=False)
     
     model_ppo = PPO("MlpPolicy", env, n_steps=2048, verbose=1, tensorboard_log=os.path.join(logs_dir, "PPO_tensorboard"))
     # model_a2c = A2C("MlpPolicy", env, n_steps=2048, verbose=1, tensorboard_log=os.path.join(logs_dir, "A2C_tensorboard"))
