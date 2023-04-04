@@ -36,14 +36,6 @@ def get_args():
     parser.add_argument('--log_path', default='./logs')
     args = parser.parse_args([])
     args = {**vars(args)}  # 将args转换为字典
-    # 打印参数
-    print("训练参数如下：")
-    print(''.join(['=']*80))
-    tplt = "{:^20}\t{:^20}\t{:^20}"
-    print(tplt.format("参数名", "参数值", "参数类型"))
-    for k, v in args.items():
-        print(tplt.format(k, v, str(type(v))))
-    print(''.join(['=']*80))
     return args
 
 
@@ -55,7 +47,7 @@ def get_env_args(args):
     args.update({'stop_time_low':5})
     args.update({'stop_time_upper': 100})
     # 巡航速度平均30m/s
-    args.update({'cruise_speed_low':25})
+    args.update({'cruise_speed_low':30})
     args.update({'cruise_speed_upper':40})
     args.update({'num_actions': 2})
     args.update({'num_observations': 5})
@@ -64,27 +56,36 @@ def get_env_args(args):
     args.update({'last_metro_time': dt.datetime.strptime(
         '2023-02-08 22:00:00', '%Y-%m-%d %H:%M:%S')})
     # 站间距离 m
-    args.update({'distance_low': 3000})
-    args.update({'distance_high': 5500})
+    args.update({'distance_low': 4000})
+    args.update({'distance_high': 5000})
     args.update({'num_metros':36})
-    args.update({'colors':['#7B68EE', '#87CEFA', '#DA70D6', '#9370DB', '#FF69B4', '#6A5ACD', '#9400D3', '#00008B', '#F8F8FF',
-                    '#8A2BE2', '#483D8B', '#6495ED', '#FF00FF', '#0000CD', '#EE82EE', '#DB7093', '#BA55D3', '#DC143C',
-                    '#000080', '#9932CC', '#D8BFD8', '#FFB6C1', '#C71585', '#DDA0DD', '#191970', '#4169E1', '#F0F8FF',
-                    '#FFF0F5', '#B0C4DE', '#800080', '#FF1493', '#E6E6FA', '#0000FF', '#4682B4', '#8B008B', '#4B0082',
-                    '#87CEEB']})
+    # args.update({'colors':['#7B68EE', '#87CEFA', '#DA70D6', '#9370DB', '#FF69B4', '#6A5ACD', '#9400D3', '#00008B', '#F8F8FF',
+    #                 '#8A2BE2', '#483D8B', '#6495ED', '#FF00FF', '#0000CD', '#EE82EE', '#DB7093', '#BA55D3', '#DC143C',
+    #                 '#000080', '#9932CC', '#D8BFD8', '#FFB6C1', '#C71585', '#DDA0DD', '#191970', '#4169E1', '#F0F8FF',
+    #                 '#FFF0F5', '#B0C4DE', '#800080', '#FF1493', '#E6E6FA', '#0000FF', '#4682B4', '#8B008B', '#4B0082',
+    #                 '#87CEEB']})
     # 地铁电机牵引功率 Kw
     args.update({'pr':190})
     # 牵引能耗能耗
     args.update({'fb1':0.98})
     args.update({'fb2':0.98})
     # 加速临界速度
-    args.update({'v1':15})
+    args.update({'v1':25})
     # 减速临界速度
-    args.update({'v2':7})  
+    args.update({'v2':5})  
     # 牵引参数 m/s2
-    args.update({'a1':0.9})
-    args.update({'b1':0.5})
+    args.update({'a1':0.95})
+    args.update({'b1':0.65})
     # 制动参数 m/s2
-    args.update({'a2': 0.7})
-    args.update({'b2': 0.9})
+    args.update({'a2': 0.75})
+    args.update({'b2': 0.92})
+
+    # # 打印参数
+    # print("训练参数如下：")
+    # print(''.join(['=']*80))
+    # tplt = "{:^20}\t{:^20}\t{:^20}"
+    # print(tplt.format("参数名", "参数值", "参数类型"))
+    # for k, v in args.items():
+    #     print(tplt.format(k, v, str(type(v))))
+    # print(''.join(['=']*80))
     return args

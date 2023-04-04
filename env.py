@@ -3,11 +3,7 @@ import os
 import torch
 import numpy as np
 import random
-from model import Actor, Critic
-from replaybuffer import ReplayBuffer
-from ddpg import DDPG
 from metro_env_eventbased import MetroEnvEventbased
-# from stable_baselines3 import DDPG
 
 
 class NormalizedActions(gym.ActionWrapper):
@@ -49,21 +45,3 @@ class TruncActions(gym.ActionWrapper):
         action[1] = low_cs + (action[1]+1)*0.5*(upper_cs-low_cs)
         return action
 
-
-def env_agent_config(cfg):
-    env = MetroEnvEventbased(cfg)
-    env = TruncActions(env)
-    env = ExtendedObservation(env)
-    # env = NormalizedActions(gym.make('Pendulum-v1', g=9.81)) # 装饰action噪声
-    # if cfg['seed'] !=0:
-    #     all_seed(env,seed=cfg['seed'])
-    n_states = env.observation_space.shape[0]
-    n_actions = env.action_space.shape[0]
-    # 更新n_states和n_actions到cfg参数中
-    cfg.update({"n_states": n_states, "n_actions": n_actions})
-    models = {"actor": Actor(n_states, n_actions, hidden_dim=cfg['actor_hidden_dim']), "critic": Critic(
-        n_states, n_actions, hidden_dim=cfg['critic_hidden_dim'])}
-    memories = {"memory": ReplayBuffer(cfg['memory_capacity'])}
-    agent = DDPG(models, memories, cfg)
-    # agent = DDPG("MlpPolicy", env, verbose=1)
-    return env, agent

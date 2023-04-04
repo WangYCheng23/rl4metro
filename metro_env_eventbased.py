@@ -32,7 +32,7 @@ class Metro:
             self.departure_time = self.init_time + 1e-9 + \
                 (self.id) * self.parameters["intervals"]
             # self.stations = stations[::-1]
-        self.stations = stations    
+        self.stations = stations
 
         self.last_metro_station = None
         self.cur_metro_station = self.stations[0]
@@ -146,7 +146,7 @@ class Metro:
             else:
                 self.next_metro_station = self.stations[n+1]
 
-            #扰动
+            # 扰动
             if not self.finished:
                 disturbance = random.choice(range(0, 14))
                 yield self.env.timeout(disturbance)
@@ -182,8 +182,8 @@ class Metro:
         brake_distance = 0.5*self.parameters['b2']*(
             brake_time[1]**2) + self.parameters['v2']*brake_time[0] + 0.5*self.parameters['a2']*(brake_time[0]**2)
 
-        assert (metro_station.dis2nextstation -
-                traction_distance - brake_distance) > 0
+        if (metro_station.dis2nextstation - traction_distance - brake_distance) < 0:
+            raise ValueError(f"{metro_station.dis2nextstation}/{traction_distance}/{brake_distance}")
         cruise_time = (metro_station.dis2nextstation -
                        traction_distance-brake_distance)/cruise_speed
         total_time = stop_time + \
@@ -244,7 +244,7 @@ class MetroEnvEventbased(gym.Env):
         self.action_space = gym.spaces.Box(low=np.array([self.parameters['stop_time_low'], self.parameters['stop_time_upper']]), high=np.array(
             [self.parameters['cruise_speed_low'], self.parameters['cruise_speed_upper']]), shape=(2,), dtype=np.float32)
         self.observation_space = gym.spaces.Box(
-            -np.inf, np.inf, ((self.parameters['num_metros']-1)*(20*4+4),), np.float32)
+            -np.inf, np.inf, ((self.parameters['num_metros']-1)*(22*4+4),), np.float32)
 
     def step(self, action):
         # action: 停车等待时间 and 巡航速度
@@ -267,13 +267,17 @@ class MetroEnvEventbased(gym.Env):
         next_obs = self.get_observation(decision_metro)
         reward = self.get_reward(decision_metro)
         terminal = True if all([m.finished for m in self.metros]) else False
+        # if terminal == True:
+        #     print(self.steps)
+        # if self.steps == 684:
+        #     assert terminal == True
         return next_obs, reward, terminal, {}
 
     def reset(self):
         self.env = simpy.Environment()
         self.cur_time = 0
         self.steps = 0
-        self.reward = 0
+        self.old_reward_matrix = np.zeros((2, 1))
         self.parameters.update({'brake_time_list': []})
         self.parameters.update({'step_criteria': self.env.event()})
         self.parameters.update({'continue_criteria': self.env.event()})
@@ -286,67 +290,87 @@ class MetroEnvEventbased(gym.Env):
         return obs
 
     def get_observation(self, decision_metro=None):
-        # 
+        #
         obs = np.zeros((self.num_metros-1, self.num_metro_stations*4+4))
         for i, m in enumerate([m for m in self.metros if m is not decision_metro]):
             if m.time_info == []:
                 observation = []
-            else: 
-                observation =[list(x.values())[-1][-1] for x in m.time_info]
-            observation.extend(0 for _ in range(self.num_metro_stations*4-len(observation)))
-            observation.extend([m.cur_metro_station.id, m.direction, m.cur_metro_station.dis2nextstation, m.finished])
+            else:
+                observation = [list(x.values())[-1][-1] for x in m.time_info]
+            observation.extend(0 for _ in range(
+                self.num_metro_stations*4-len(observation)))
+            observation.extend([m.cur_metro_station.id, m.direction,
+                               m.cur_metro_station.dis2nextstation, m.finished])
             obs[i] = observation
         return obs
 
     def get_reward(self, decision_metro):
         rewards_matrix = np.zeros((2, math.ceil(self.env.now)))
         for i, m in enumerate(self.metros):
-            # 先读取time——info
+            # 先读取time—info
             if m.time_info != []:
                 for info in m.time_info:
+                    # if (m.direction==0 and list(info.keys())[0] == 'traction_time') or (m.direction==1 and list(info.keys())[0] == 'brake_time'):
                     if list(info.keys())[0] == 'traction_time':
                         rewards_matrix[0, math.ceil(list(info.values())[0][0]):math.ceil(
                             list(info.values())[0][1])] += 1
+                    # elif (m.direction==0 and list(info.keys())[0] == 'brake_time') or (m.direction==1 and list(info.keys())[0] == 'traction_time'):
                     elif list(info.keys())[0] == 'brake_time':
                         rewards_matrix[1, math.ceil(list(info.values())[0][0]):math.ceil(
                             list(info.values())[0][1])] += 1
-            # 再计算到当前的
-            if m.cur_traffic_state == 'traction':
-                if m.time_info != []:
-                    rewards_matrix[0, math.ceil(
-                        self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
-                else:
-                    rewards_matrix[1, 0:math.ceil(self.env.now)] += 1
-            elif m.cur_traffic_state == 'brake':
-                rewards_matrix[1, math.ceil(
-                    self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
-        r = np.clip(rewards_matrix.min(axis=0), 0, np.inf).sum() - self.reward
-        self.reward = np.clip(rewards_matrix.min(axis=0), 0, np.inf).sum()
+                    elif list(info.keys())[0] == 'cruise_time' or list(info.keys())[0] == 'stop_time':
+                        continue
+                    else:
+                        raise AssertionError
+            # # 再计算到当前的
+            # if m.cur_traffic_state == "stop" or m.cur_traffic_state == "cruise":
+            #     continue
+            # # elif (m.direction==0 and m.cur_traffic_state == 'traction') or (m.direction==1 and m.cur_traffic_state == 'brake'):
+            # elif m.cur_traffic_state == 'traction':
+            #     if m.time_info != []:
+            #         rewards_matrix[0, math.ceil(self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
+            #     else:
+            #         rewards_matrix[0, 0:math.ceil(self.env.now)] += 1
+            # # elif (m.direction==0 and m.cur_traffic_state == 'brake') or (m.direction==1 and m.cur_traffic_state == 'traction'):
+            # elif m.cur_traffic_state == 'brake':
+            #     if m.time_info != []:
+            #        rewards_matrix[1, math.ceil(self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
+            #     else:
+            #         rewards_matrix[1, 0:math.ceil(self.env.now)] += 1
+            # else:
+            #     raise AssertionError
+        r = np.clip(rewards_matrix.min(axis=0), 0, np.inf).sum() - \
+            np.clip(self.old_reward_matrix.min(axis=0), 0, np.inf).sum()
+        assert r >= 0
+        self.old_reward_matrix = rewards_matrix
 
         return r
 
     def config_environment(self):
-        # 真实数据
-        if self.parameters["test_mode"]:
-            metro_stations = pd.read_csv(
-                './raw_data/地铁站点信息_2920000403624.csv', sep=',')
-            metro_stations = metro_stations[metro_stations['LINE_NAME']
-                                            == 1]['SITE_NAME'].tolist()
-        # 随机生成车站数据
-        else:
-            metro_stations = ["".join([chr(random.randint(0x4e00, 0x9fbf)) for _ in range(2)]) for _ in range(
-                self.parameters["low_num_stations"], self.parameters["upper_num_stations"])]
-        self.metro_stations_name_list = metro_stations
+        # # 真实数据
+        # if self.parameters["test_mode"]:
+        #     metro_stations = pd.read_csv(
+        #         './raw_data/地铁站点信息_2920000403624.csv', sep=',')
+        #     metro_stations = metro_stations[metro_stations['LINE_NAME']
+        #                                     == 1]['SITE_NAME'].tolist()
+        # # 随机生成车站数据
+        # else:
+        #     metro_stations = ["".join([chr(random.randint(0x4e00, 0x9fbf)) for _ in range(2)]) for _ in range(
+        #         self.parameters["low_num_stations"], self.parameters["upper_num_stations"])]
+
+        self.metro_stations_name_list = ['李村公园', '李村', '枣山路', '华楼山路', '东韩', '辽阳东路', '同安路', '苗岭路', '石老人浴场', '海安路', '海川路',
+                                         '海游路', '麦岛', '高雄路', '燕儿岛路', '浮山所', '五四广场', '芝泉路', '海信桥', '台东', '利津路', '泰山路']
         # ~m
-        metro_station_distances = np.random.uniform(
-            low=self.parameters["distance_low"], high=self.parameters["distance_high"], size=len(metro_stations)-1).round(2)
+        metro_station_distances = [1474,1428,1521,1548,2028,1463,2063,1544,1373,1549,1381,1566,1414,1996,1588,1545,2054,1471,1535,1538,1495,]
 
         # metro_station_distances = [2250 for _ in range(len(metro_stations))]
 
         # 初始化车站数据
         self.num_metro_stations = len(self.metro_stations_name_list)
-        self.metro_stations_forward = [MetroStation(self.parameters, self.env, i, metro_stations[i], metro_station_distances[i] if i<self.num_metro_stations-1 else 0) for i in range(self.num_metro_stations)]
-        self.metro_stations_backward = [MetroStation(self.parameters, self.env, self.num_metro_stations-i-1, metro_stations[::-1][i], metro_station_distances[::-1][i] if i<self.num_metro_stations-1 else 0) for i in range(self.num_metro_stations)]
+        self.metro_stations_forward = [MetroStation(self.parameters, self.env, i,  self.metro_stations_name_list[i],
+                                                    metro_station_distances[i] if i < self.num_metro_stations-1 else 0) for i in range(self.num_metro_stations)]
+        self.metro_stations_backward = [MetroStation(self.parameters, self.env, self.num_metro_stations-i-1,  self.metro_stations_name_list[::-1]
+                                                     [i], metro_station_distances[::-1][i] if i < self.num_metro_stations-1 else 0) for i in range(self.num_metro_stations)]
 
         # 初始化列车数据
         self.num_metros = self.parameters["num_metros"]
@@ -435,13 +459,18 @@ if __name__ == "__main__":
     metro_env = MetroEnvEventbased(params)
     next_obs = metro_env.reset()
     rew_li = []
+    steps = 0
+    time1 = time.time()
     while True:
         action = torch.FloatTensor(
-            [random.randint(10, 15), random.randint(25, 40)])
+            [random.randint(params["stop_time_low"], params["stop_time_upper"]), random.randint(params["cruise_speed_low"], params["cruise_speed_upper"])])
         next_obs, reward, terminal, _ = metro_env.step(action)
         rew_li.append(reward)
+        steps += 1
         if terminal:
             break
+    print(time.time()-time1)
+    print(steps)
     print(rew_li)
     print(sum(rew_li))
     metro_env.render()
