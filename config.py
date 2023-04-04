@@ -49,11 +49,11 @@ def get_env_args(args):
     args.update({"low_num_stations":10})
     args.update({"upper_num_stations": 30})
     args.update({'intervals':300})
-    args.update({'stop_time_low':15})
-    args.update({'stop_time_upper': 45})
+    args.update({'stop_time_low':25.0})
+    args.update({'stop_time_upper': 35.0})
     # 巡航速度平均30m/s
-    args.update({'cruise_speed_low':20})
-    args.update({'cruise_speed_upper':25})
+    args.update({'cruise_speed_low':20.0})
+    args.update({'cruise_speed_upper':25.0})
     args.update({'num_actions': 2})
     args.update({'num_observations': 5})
     args.update({'first_metro_time': dt.datetime.strptime(

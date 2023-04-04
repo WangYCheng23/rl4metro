@@ -17,16 +17,17 @@ class MetroEnvEventbased(gym.Env):
         self.global_clock = 0
 
         # 停站时间 and 巡航时间
-        self.action_space = gym.spaces.Box(low=np.array([self.parameters['stop_time_low'], self.parameters['cruise_speed_low']]), 
-                                           high=np.array([self.parameters['stop_time_upper'], self.parameters['cruise_speed_upper']]), shape=(2,), dtype=np.float64)
+        # self.action_space = gym.spaces.Box(low=np.array([self.parameters['stop_time_low'], self.parameters['cruise_speed_low']]), 
+        #                                    high=np.array([self.parameters['stop_time_upper'], self.parameters['cruise_speed_upper']]), shape=(2,), dtype=np.float64)
+        self.action_space = gym.spaces.Box(low=np.array([-1,-1]), high=np.array([1,1]), shape=(2,), dtype=np.float64)
         self.observation_space = gym.spaces.Box(-1, np.inf, shape=(1, (self.parameters['num_metros']-1)*(self.parameters["num_metro_stations"]*4+4)), dtype=np.float64)
 
     def step(self, action):
         # action: 停车等待时间 and 巡航速度
-        action = action.tolist()
-        print(action)
-        stop_time = action[0]
-        cruise_speed = action[1]
+        # print(action)
+        stop_time = ((self.parameters['stop_time_upper']-self.parameters['stop_time_low'])*(action[0]+1))/2 + self.parameters['stop_time_low']
+        cruise_speed = ((self.parameters['cruise_speed_upper']-self.parameters['cruise_speed_low'])*(action[1]+1))/2 + self.parameters['cruise_speed_low']
+        # print(stop_time, cruise_speed)
         self.steps += 1
         for m in self.metros:
             if m.wait_action == True:
