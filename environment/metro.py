@@ -12,6 +12,8 @@ class Metro:
         self.name = str(direction) + '-' + str(id)
         self.init_time = init_time
         self.mass = mass
+
+        # Variables
         self.stop_time = 0
         self.cruise_speed = 0
 
@@ -109,6 +111,7 @@ class Metro:
 
             self.mechanics_info.append([self.env.now + 1e-9, 0])
             self.cur_traffic_state = "stop"
+            # print(f"station: {self.cur_metro_station} stop_time: {self.stop_time}")
             yield self.env.timeout(self.stop_time)
             self.time_info.append(dict(stop_time=[self.env.now - self.stop_time, self.env.now]))
 

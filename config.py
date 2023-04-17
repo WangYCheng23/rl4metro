@@ -46,27 +46,34 @@ def get_env_args(args):
     # args.update({"metro_station_distances":[1474,1428,1521,1548,2028,1463,2063,1544,1373,1549,1381,1566,1414,1996,1588,1545,2054,1471,1535,1538,1495]})
     args.update({'num_metros':20})
     args.update({"raw_data":pd.read_excel('./raw_data/厦门1号线数据.xlsx', sheet_name=None)})
+    # 站点数据
     args.update({"metro_stations_name_list":args["raw_data"]["Sheet1"]['站点'].tolist()})
     args.update({"num_metro_stations":len(args["metro_stations_name_list"])})
-    args.update({"metro_station_distances":(args["raw_data"]["Sheet2"]["间隔距离"]*1000+np.random.random()*100).tolist()})
+    # 站间距离 m
+    args.update({"metro_station_distances":(args["raw_data"]["Sheet2"]["间隔距离"]*1000+np.random.random()*1000).tolist()})
+    # 站间时间
+    args.update({"metro_station_intervals":(args["raw_data"]["Sheet2"]["间隔时间"].apply(lambda x: x.minute)*60).tolist()})
+    # 停站时间
+    args.update({"metro_station_dwell_time":args["raw_data"]["Sheet2"]["停站时间"].tolist()})
     args.update({"station_id":[1,2,3]})
     args.update({"low_num_stations":10})
     args.update({"upper_num_stations": 30})
+    # 发车间隔
     args.update({'intervals':300})
-    args.update({'stop_time_low':25.0})
-    args.update({'stop_time_upper': 35.0})
-    # 巡航速度平均30m/s
+
+    # 停站时间平均30s
+    args.update({'stop_time_low':20.0})
+    args.update({'stop_time_upper': 40.0})
+    # 巡航速度平均22.5m/s
     args.update({'cruise_speed_low':20.0})
     args.update({'cruise_speed_upper':25.0})
+
     args.update({'num_actions': 2})
     args.update({'num_observations': (args['num_metros']-1)*(args['num_metro_stations']*4+4)})
     args.update({'first_metro_time': dt.datetime.strptime(
         '2023-02-08 07:00:00', '%Y-%m-%d %H:%M:%S')})
     args.update({'last_metro_time': dt.datetime.strptime(
         '2023-02-08 22:00:00', '%Y-%m-%d %H:%M:%S')})
-    # 站间距离 m
-    args.update({'distance_low': 4000})
-    args.update({'distance_high': 5000})
 
     # args.update({'colors':['#7B68EE', '#87CEFA', '#DA70D6', '#9370DB', '#FF69B4', '#6A5ACD', '#9400D3', '#00008B', '#F8F8FF',
     #                 '#8A2BE2', '#483D8B', '#6495ED', '#FF00FF', '#0000CD', '#EE82EE', '#DB7093', '#BA55D3', '#DC143C',
@@ -79,12 +86,12 @@ def get_env_args(args):
     args.update({'fb1':0.98})
     args.update({'fb2':0.98})
     # 加速临界速度
-    args.update({'v1':11})
+    args.update({'v1':15})
     # 减速临界速度
-    args.update({'v2':5})  
+    args.update({'v2':7})  
     # 牵引参数 m/s2
-    args.update({'a1':1.2})
-    args.update({'b1':0.8})
+    args.update({'a1':1.3})
+    args.update({'b1':0.9})
     # 制动参数 m/s2
     args.update({'a2': 1})
     args.update({'b2': 1.1})
