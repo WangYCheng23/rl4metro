@@ -7,19 +7,21 @@ from stable_baselines3.common.env_checker import check_env
 
 
 def train():
+    args = get_args()
+    params = get_env_args(args)
+    env = MetroEnvEventbased(params)
+    check_env(env=env, warn=True, skip_render_check=False)
+
     time_str = dt.datetime.strftime(dt.datetime.now(),'%Y-%m%d-%H-%M-%S')
-    model_dir = os.path.join('./models',f'{time_str}')
-    logs_dir = os.path.join('./logs',f'{time_str}')
+    model_name = f"{time_str}-{params['algo_name']}-{params['num_metros']}-{params['num_metro_stations']}"
+    log_name = f"{time_str}-{params['algo_name']}-{params['num_metros']}-{params['num_metro_stations']}"
+    model_dir = os.path.join('./models', model_name)
+    logs_dir = os.path.join('./logs', log_name)
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
-
-    args = get_args()
-    params = get_env_args(args)
-    env = MetroEnvEventbased(params)
-    check_env(env=env, warn=True, skip_render_check=False)
     
     model_ppo = PPO("MlpPolicy", env, n_steps=420, verbose=1, tensorboard_log=os.path.join(logs_dir, "PPO_tensorboard"))
     # model_a2c = A2C("MlpPolicy", env, n_steps=2048, verbose=1, tensorboard_log=os.path.join(logs_dir, "A2C_tensorboard"))
