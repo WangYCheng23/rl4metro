@@ -89,23 +89,6 @@ class MetroEnvEventbased(gym.Env):
                         continue
                     else:
                         raise AssertionError
-            # # 再计算到当前的
-            # if m.cur_traffic_state == "stop" or m.cur_traffic_state == "cruise":
-            #     continue
-            # # elif (m.direction==0 and m.cur_traffic_state == 'traction') or (m.direction==1 and m.cur_traffic_state == 'brake'):
-            # elif m.cur_traffic_state == 'traction':
-            #     if m.time_info != []:
-            #         rewards_matrix[0, math.ceil(self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
-            #     else:
-            #         rewards_matrix[0, 0:math.ceil(self.env.now)] += 1
-            # # elif (m.direction==0 and m.cur_traffic_state == 'brake') or (m.direction==1 and m.cur_traffic_state == 'traction'):
-            # elif m.cur_traffic_state == 'brake':
-            #     if m.time_info != []:
-            #        rewards_matrix[1, math.ceil(self.env.now - list(m.time_info[-1].values())[0][-1]):math.ceil(self.env.now)] += 1
-            #     else:
-            #         rewards_matrix[1, 0:math.ceil(self.env.now)] += 1
-            # else:
-            #     raise AssertionError
         r = np.clip(rewards_matrix.min(axis=0), 0, np.inf).sum() - \
             np.clip(self.old_reward_matrix.min(axis=0), 0, np.inf).sum()
         assert r >= 0
@@ -128,8 +111,8 @@ class MetroEnvEventbased(gym.Env):
 
         # 初始化列车数据
         self.num_metros = self.parameters["num_metros"]
-        self.metros = [Metro(self.parameters, self.env, i, 0, 0, 40, self.metro_stations_forward) for i in range(
-            self.num_metros//2)] + [Metro(self.parameters, self.env, i, 1, 0, 40, self.metro_stations_backward) for i in range(self.num_metros//2)]
+        self.metros = [Metro(parameters=self.parameters, env=self.env, id=i, direction=0, init_time=0, mass=40, stations=self.metro_stations_forward) for i in range(
+            self.num_metros//2)] + [Metro(parameters=self.parameters, env=self.env, id=i, direction=1, init_time=0, mass=40, stations=self.metro_stations_backward) for i in range(self.num_metros//2)]
 
         self.parameters['metros'] = self.metros
         self.parameters['metro_stations_forward'] = self.metro_stations_forward
