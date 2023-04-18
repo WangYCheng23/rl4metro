@@ -23,7 +23,7 @@ def train():
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
     
-    model_ppo = PPO("MlpPolicy", env, n_steps=420, verbose=1, tensorboard_log=os.path.join(logs_dir, "PPO_tensorboard"))
+    model_ppo = PPO("MlpPolicy", env, n_steps=params['num_metros']*params['num_metro_stations'], verbose=1, tensorboard_log=os.path.join(logs_dir, "PPO_tensorboard"))
     # model_a2c = A2C("MlpPolicy", env, n_steps=2048, verbose=1, tensorboard_log=os.path.join(logs_dir, "A2C_tensorboard"))
     # model_ddpg = DDPG("MlpPolicy", env, verbose=1, tensorboard_log=os.path.join(logs_dir, "DDPG_tensorboard"), action_noise=action_noise)
     # 加载模型用的代码
