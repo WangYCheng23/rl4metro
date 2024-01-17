@@ -32,7 +32,7 @@ def get_args():
     parser.add_argument('--actor_hidden_dim', default=256, type=int)
     parser.add_argument('--device', default='cuda',
                         type=str, help="cpu or cuda")
-    parser.add_argument('--seed', default=1, type=int, help="random seed")
+    parser.add_argument('--seed', default=23, type=int, help="random seed")
     parser.add_argument('--test_mode', default=False, type=int, help="for test")
     parser.add_argument('--log_path', default='./logs')
     args = parser.parse_args([])

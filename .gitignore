@@ -1,7 +1,13 @@
-logs/*
-models/*
-raw_data/*
-
 *.ipynb
 __pycache__
 .ipynb_checkpoints
+
+raw_data/*  
+!raw_data/.gitkeep
+!raw_data/厦门1号线数据.xlsx
+
+models/*
+!models/.gitkeep
+
+logs/*
+!logs/.gitkeep
