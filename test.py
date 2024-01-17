@@ -34,7 +34,7 @@ def test():
     print(rew_mean1)
 
     # policy动作test
-    agent = PPO.load('./models/2023-0404-15-53-56/PPO/15144960.zip')
+    agent = PPO.load('./models/2023-0418-10-40-28-PPO-20-24/PPO/7280640.zip')
     iter = 0
     time2 = time.time()
     rew_mean2 = 0 

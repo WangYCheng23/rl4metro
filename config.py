@@ -104,5 +104,5 @@ def get_env_args(args):
     # for k, v in args.items():
     #     print(tplt.format(k, v, str(type(v))))
     # print(''.join(['=']*80))
-    args.update({'test_iterations':2})
+    args.update({'test_iterations':10})
     return args
