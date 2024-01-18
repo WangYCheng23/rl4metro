@@ -11,7 +11,7 @@ class MetroEnvEventbased(gym.Env):
     def __init__(self, parameters) -> None:
         super().__init__()
         self.parameters = parameters
-        self.seed(seed=self.parameters["seed"])
+        # self.seed(seed=self.parameters["seed"])
         self.first_metro_time = parameters["first_metro_time"]
         self.last_metro_time = parameters["last_metro_time"]
         self.global_clock = 0
@@ -21,7 +21,7 @@ class MetroEnvEventbased(gym.Env):
         #                                    high=np.array([self.parameters['stop_time_upper'], self.parameters['cruise_speed_upper']]), shape=(2,), dtype=np.float64)
         self.action_space = gym.spaces.Box(low=np.array([-1,-1]), high=np.array([1,1]), shape=(2,), dtype=np.float64)
         self.observation_space = gym.spaces.Box(-1, np.inf, shape=(1, (self.parameters['num_metros']-1)*(self.parameters["num_metro_stations"]*4+4)), dtype=np.float64)
-
+    
     def step(self, action):
         # action: 停车等待时间 and 巡航速度
         # print(action)
